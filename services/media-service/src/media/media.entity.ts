@@ -1,0 +1,86 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+// Phân loại file: dùng để áp whitelist validation và tổ chức folder trên Cloudinary
+export enum MediaCategory {
+  IMAGE = 'image',
+  DOCUMENT = 'document',
+  CODE = 'code',
+}
+
+@Entity('media_assets')
+export class MediaAsset {
+  @Column({ name: 'scan_status', type: 'varchar', length: 20, default: 'unverified' })
+  scanStatus: 'clean' | 'unverified';
+  @Column({ name: 'scanned_at', type: 'timestamptz', nullable: true }) scannedAt: Date | null;
+  // UUID nội bộ — dùng làm path param trong API (/media/:id)
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({
+    name: 'original_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  originalName: string | null;
+
+  // Cloudinary public_id, chứa dấu "/" → không dùng làm path param
+  @Column({ name: 'public_id', unique: true })
+  publicId: string;
+
+  // resource_type Cloudinary trả về khi upload (image | raw | video). Upload dùng 'auto' nên
+  // loại thực tế do Cloudinary quyết định (vd. PDF là 'image'); xóa phải dùng đúng giá trị này.
+  // NULL với bản ghi cũ, khi đó suy ra từ category.
+  @Column({ name: 'resource_type', type: 'varchar', length: 10, nullable: true })
+  resourceType: string | null;
+
+  // HTTPS URL từ Cloudinary — trả về cho client
+  @Column({ name: 'secure_url' })
+  secureUrl: string;
+
+  @Column({ length: 20 })
+  format: string;
+
+  // Raw MIME type lưu để audit sau này
+  @Column({ name: 'mime_type', length: 100 })
+  mimeType: string;
+
+  @Column({ type: 'enum', enum: MediaCategory })
+  category: MediaCategory;
+
+  @Column({ name: 'size_bytes', type: 'int' })
+  sizeBytes: number;
+
+  // SHA-256 content hash — phát hiện duplicate upload
+  @Column({ name: 'sha256_hash', length: 64, unique: true })
+  sha256Hash: string;
+
+  // UUID lấy từ X-User-ID header (do Gateway inject sau khi verify JWT)
+  @Column({ name: 'uploaded_by', length: 36 })
+  uploadedBy: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  // Soft delete: không xóa bản ghi, chỉ đánh dấu thời điểm xóa
+  @Column({
+    name: 'deleted_at',
+    type: 'timestamptz',
+    nullable: true,
+    default: null,
+  })
+  deletedAt: Date | null;
+
+  // Lưu ai là người thực hiện xóa (chủ file hoặc admin/moderator)
+  @Column({ name: 'deleted_by', length: 36, nullable: true, default: null })
+  deletedBy: string | null;
+}

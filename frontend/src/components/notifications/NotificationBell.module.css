@@ -1,0 +1,18 @@
+.bell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.bell:hover, .bell[aria-expanded="true"] { background: rgba(255, 255, 255, 0.12); }
+.bell:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.badge { font-size: 12px; font-weight: 600; padding-left: 8px; border-left: 1px solid rgba(255, 255, 255, 0.35); }
